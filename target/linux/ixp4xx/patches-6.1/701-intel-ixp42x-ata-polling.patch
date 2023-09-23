@@ -1,0 +1,22 @@
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -185,7 +185,7 @@ static struct ata_port_operations ixp4xx
+ };
+ 
+ static struct ata_port_info ixp4xx_port_info = {
+-	.flags		= ATA_FLAG_NO_ATAPI,
++	.flags		= ATA_FLAG_NO_ATAPI | ATA_FLAG_PIO_POLLING,
+ 	.pio_mask	= ATA_PIO4,
+ 	.port_ops	= &ixp4xx_port_ops,
+ };
+@@ -288,7 +288,9 @@ static int ixp4xx_pata_probe(struct plat
+ 
+ 	ata_print_version_once(dev, DRV_VERSION);
+ 
+-	return ata_host_activate(ixpp->host, irq, ata_sff_interrupt, 0, &ixp4xx_sht);
++	// hharte
++	// return ata_host_activate(ixpp->host, irq, ata_sff_interrupt, 0, &ixp4xx_sht);
++	return ata_host_activate(ixpp->host, 0, NULL, 0, &ixp4xx_sht);
+ }
+ 
+ static const struct of_device_id ixp4xx_pata_of_match[] = {

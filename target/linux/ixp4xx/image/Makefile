@@ -74,6 +74,21 @@ define Device/linksys_nslu2
 endef
 TARGET_DEVICES += linksys_nslu2
 
+define Device/multitech_ffx30
+	DEVICE_VENDOR := MultiTech
+	DEVICE_MODEL := FaxFinder x30
+	DEVICE_PACKAGES := apex ixp4xx-microcode-ethernet kmod-serial-8250-exar \
+			   minicom pciutils ntpdate iperf3 gpiod-tools \
+			   kmod-spi-bitbang kmod-spi-gpio
+	DEVICE_DTS := intel-ixp42x-multitech-ffx30
+	KERNEL := kernel-bin | append-dtb
+	IMAGES := kernel.bin rootfs.bin
+	IMAGE/kernel.bin := append-kernel
+	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
+endef
+TARGET_DEVICES += multitech_ffx30
+
+
 define Device/usrobotics_usr8200
 	DEVICE_VENDOR := USRobotics
 	DEVICE_MODEL := USR8200

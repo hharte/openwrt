@@ -1,0 +1,184 @@
+--- /dev/null
++++ b/arch/arm/boot/dts/intel-ixp42x-multitech-ffx30.dts
+@@ -0,0 +1,181 @@
++// SPDX-License-Identifier: ISC
++/*
++ * Device Tree file for the MultiTech FaxFinder x30 series.
++ * This machine is based on IXP42x.
++ */
++
++/dts-v1/;
++
++#include "intel-ixp42x.dtsi"
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "MultiTech FaxFinder FFx30";
++	compatible = "multitech,ffx30", "intel,ixp42x";
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x00000000 0x8000000>;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200n8";
++		stdout-path = "uart0:115200n8";
++	};
++
++	aliases {
++		serial0 = &uart0;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		led-status {
++			label = "ffx30:green:status";
++			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++			linux,default-trigger = "heartbeat";
++		};
++
++		led-fault {
++			label = "ffx30:red:fault";
++			gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
++			default-state = "off";
++		};
++	};
++
++    gpio_keys {
++	compatible = "gpio-keys";
++
++		button-reset {
++			wakeup-source;
++			linux,code = <KEY_RESTART>;
++			label = "reset";
++			gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	spi {
++		compatible = "spi-gpio";
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		sck-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
++		mosi-gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
++		cs-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
++		num-chipselects = <1>;
++
++		rtc: ds1302@0 {
++			compatible = "maxim,ds1302";
++			reg = <0>;
++			spi-max-frequency = <500000>;
++			spi-3wire;
++			spi-lsb-first;
++			spi-cs-high;
++		};
++	};
++
++
++	soc {
++		bus@c4000000 {
++			flash@0,0 {
++				compatible = "intel,ixp4xx-flash", "cfi-flash";
++				bank-width = <2>;
++				/* Enable writes on the expansion bus */
++				intel,ixp4xx-eb-write-enable = <1>;
++				/* 16 MB of Flash mapped in at CS0 */
++				reg = <0 0x00000000 0x1000000>;
++
++				partitions {
++					compatible = "redboot-fis";
++					/* Eraseblock at 0x0fe0000 */
++					fis-index-block = <0x7f>;
++				};
++			};
++			ide@1,0 {
++				compatible = "intel,ixp4xx-compact-flash";
++				/*
++				 * Set up expansion bus config to a really slow timing.
++				 * The CF driver will dynamically reconfigure these timings
++				 * depending on selected PIO mode (0-4).
++				 */
++				intel,ixp4xx-eb-t1 = <3>; // 3 cycles extra address phase
++				intel,ixp4xx-eb-t2 = <3>; // 3 cycles extra setup phase
++				intel,ixp4xx-eb-t3 = <15>; // 15 cycles extra strobe phase
++				intel,ixp4xx-eb-t4 = <3>; // 3 cycles extra hold phase
++				intel,ixp4xx-eb-t5 = <15>; // 15 cycles extra recovery phase
++				intel,ixp4xx-eb-cycle-type = <0>; // Intel cycle type
++				intel,ixp4xx-eb-byte-access-on-halfword = <1>;
++				intel,ixp4xx-eb-mux-address-and-data = <0>;
++				intel,ixp4xx-eb-ahb-split-transfers = <0>;
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++				/* First register set is CMD second is CTL (notice it uses CS2) */
++				reg = <1 0x00000000 0x1000000>, <2 0x00000000 0x1000000>;
++				interrupt-parent = <&gpio0>;
++				interrupts = <1 IRQ_TYPE_EDGE_RISING>;
++			};
++			/*
++			 * 74374 Latch at CS3
++			 */
++			gpio1: gpio@3,0 {
++				/*
++				* MMIO GPIO in one byte
++				*/
++				compatible = "ti,74273";
++				reg = <3 0x00000000 0x1>;
++				gpio-controller;
++				#gpio-cells = <2>;
++				/* Expansion bus settings */
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++				gpio-line-names = "modem1_reset", "modem2_reset", "modem3_reset", "modem4_reset",
++					"modem5_reset", "modem6_reset", "modem7_reset", "modem8_reset";
++
++			};
++		};
++
++		modem_reset {
++			modem-reset-gpios = <&gpio1 0 GPIO_ACTIVE_LOW>,
++				<&gpio1 1 GPIO_ACTIVE_LOW>,
++				<&gpio1 2 GPIO_ACTIVE_LOW>,
++				<&gpio1 3 GPIO_ACTIVE_LOW>,
++				<&gpio1 4 GPIO_ACTIVE_LOW>,
++				<&gpio1 5 GPIO_ACTIVE_LOW>,
++				<&gpio1 6 GPIO_ACTIVE_LOW>,
++				<&gpio1 7 GPIO_ACTIVE_LOW>;
++		};
++
++		pci@c0000000 {
++			status = "ok";
++
++			/*
++			 * We have one on-board PCI device.
++			 */
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map =
++			/* IDSEL 13 */
++			<0x6800 0 0 1 &gpio0 7 IRQ_TYPE_LEVEL_LOW>; /* INT A on slot 1 is irq 11 */
++		};
++
++		/* Ethernet Port */
++		ethernet@c8009000 {
++			status = "ok";
++			queue-rx = <&qmgr 3>;
++			queue-txready = <&qmgr 20>;
++			phy-mode = "rgmii";
++			phy-handle = <&phy1>;
++
++			mdio {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				phy1: ethernet-phy@1 {
++					reg = <1>;
++				};
++			};
++		};
++	};
++};
