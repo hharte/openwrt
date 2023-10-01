@@ -32,9 +32,9 @@ import telnetlib
 import string
 import binascii
 import socket
-import _thread
-import socketserver
-import http.server
+import thread
+import SocketServer as socketserver
+import SimpleHTTPServer as httpserver
 
 reboot = 0
 HOST = "192.168.1.1"
@@ -56,8 +56,8 @@ device="ixp0"
 ####################
 
 def start_server(server):
-    httpd = socketserver.TCPServer((server,PORT),http.server.SimpleHTTPRequestHandler)
-    _thread.start_new_thread(httpd.serve_forever,())
+    httpd = socketserver.TCPServer((server,PORT),httpserver.SimpleHTTPRequestHandler)
+    thread.start_new_thread(httpd.serve_forever,())
 
 ####################
 
@@ -266,7 +266,7 @@ if imagefile or url:
 
     if verbose:
 	print("Writing new image...")
-    print(cmd, end=' ')
+    print(cmd) #, end=' ')
     tn.write(cmd)
     buf = tn.read_until("Returned 0",10)
 
