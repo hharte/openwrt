@@ -1,0 +1,294 @@
+--- /dev/null
++++ b/arch/arm/boot/dts/intel-ixp43x-moxa-uc8410.dts
+@@ -0,0 +1,291 @@
++// SPDX-License-Identifier: ISC
++/*
++ * Device Tree file for the Moxa IXP435-based UC-8410
++ */
++
++/dts-v1/;
++
++#include "intel-ixp43x.dtsi"
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Moxa UC-8410";
++	compatible = "moxa,uc8410", "intel,ixp43x";
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	memory@0 {
++		/* 256 MB SDRAM */
++		device_type = "memory";
++		reg = <0x00000000 0x10000000>;
++	};
++
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++
++		sram: static_ram@52000000 {
++			/* 256 KB Battery-backed SRAM at CS2 */
++			reg = <0x0 0x52000000 0x0 0x00040000>;
++		};
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200n8 root=/dev/sda1 rw rootwait";
++		stdout-path = "uart0:115200n8";
++	};
++
++	aliases {
++		serial0 = &uart0;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		led-user {
++			label = "uc8410:green:ready";
++			gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++			linux,default-trigger = "heartbeat";
++		};
++	};
++
++	gpio_keys {
++		compatible = "gpio-keys";
++		button-reset {
++			wakeup-source;
++			linux,code = <KEY_RESTART>;
++			label = "reset";
++			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	gpio-beeper {
++		compatible = "gpio-beeper";
++		gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
++	};
++
++	i2c {
++		/* Note: there is no pull-up resistor on SCL on this board, so
++		 * it is necessary to omit GPIO_OPEN_DRAIN from scl-gpios,
++		 * set the scl-open-drain flag to make the RTC work properly.
++		 * Both of these settings are needed, otherwise SCL does not toggle.
++		 */
++		compatible = "i2c-gpio";
++		sda-gpios = <&gpio0 5 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
++		scl-gpios = <&gpio0 4 (GPIO_ACTIVE_HIGH)>;
++		i2c-gpio,scl-open-drain;
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		rtc@6f {
++			compatible = "isil,isl1208";
++			reg = <0x6f>;
++			interrupt-names = "irq";
++			interrupts-extended = <&gpio0 6 IRQ_TYPE_EDGE_FALLING>;
++		};
++	};
++
++	soc {
++		bus@c4000000 {
++			flash@0,0 {
++				compatible = "intel,ixp4xx-flash", "cfi-flash";
++				bank-width = <2>;
++				/* Enable writes on the expansion bus */
++				intel,ixp4xx-eb-write-enable = <1>;
++				/*
++				 * 32 MB of Flash in 0x20000 byte blocks
++				 * mapped in at CS0 and CS1
++				 */
++				reg = <0 0x00000000 0x2000000>;
++
++				partitions {
++					compatible = "redboot-fis";
++					/* Eraseblock at 0x0fe0000 */
++					fis-index-block = <0x7f>;
++				};
++			};
++
++			bb_sram@2,0 {
++				#address-cells = <1>;
++				#size-cells = <1>;
++
++				intel,ixp4xx-eb-t1 = <1>; // 3 cycles extra address phase
++				intel,ixp4xx-eb-t2 = <1>; // 3 cycles extra setup phase
++				intel,ixp4xx-eb-t3 = <1>; // 15 cycles extra strobe phase
++				intel,ixp4xx-eb-t4 = <1>; // 3 cycles extra hold phase
++				intel,ixp4xx-eb-t5 = <1>; // 15 cycles extra recovery phase
++				intel,ixp4xx-eb-cycle-type = <0>; // Intel cycle type
++				intel,ixp4xx-eb-byte-access-on-halfword = <1>;
++				intel,ixp4xx-eb-mux-address-and-data = <0>;
++				intel,ixp4xx-eb-ahb-split-transfers = <0>;
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++
++				reg = <2 0x00000000 0x40000>;
++			};
++
++			/*
++			 * Moxa Misc registers: CS3
++			 * 0x53000000-0x5300000F: NAND FLASH
++			 * 0x53000010: DI
++			 * 0x53000020: DO
++			 * 0x53000070: Debug LEDs (LED7:3)
++			 */
++			moxa-misc@3,0 {
++				reg = <3 0x00000000 0x01000000>;
++				/* Expansion bus settings */
++				intel,ixp4xx-eb-cycle-type = <0>; // Intel cycle type
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++			};
++		};
++
++		nand@53000000 {
++			compatible = "marvell,orion-nand";
++			status = "ok";
++
++			cs-gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>; /* nCS tied to GPIO9 */
++
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			ale = <1>;
++			cle = <0>;
++			bank-width = <1>;
++			chip-delay = <25>;
++
++			reg = <0x53000000 0x10>;
++			nand-on-flash-bbt;
++
++			partitions {
++				compatible = "fixed-partitions";
++				#address-cells = <1>;
++				#size-cells = <1>;
++
++				fs@0 {
++					label = "UserDisk";
++					reg = <0x0 0x0>;
++				};
++			};
++		};
++
++		sram@52000000 {
++			compatible = "phram";
++			label = "sram";
++			reg = <0x52000000 0x00040000>;
++			memory-region = <&sram>;
++		};
++
++		di: gpio@53000010 {
++			/*
++			* MMIO Digital Input (DI)
++			*/
++			compatible = "ti,74125";
++			reg = <0x53000010 0x1>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-line-names = "di0", "di1", "di2", "di3";
++		};
++
++		do: gpio@53000020 {
++			/*
++			* MMIO Digital Output (DO)
++			* These have yellow LEDs D[9:12] associated with them.
++			* The LEDs illuminate when the DO is driven low.
++			*/
++			compatible = "ti,74175";
++			reg = <0x53000020 0x1>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-line-names = "do0", "do1", "do2", "do3";
++		};
++
++		dbg_led: gpio@53000070 {
++			/*
++			* Debug LEDs: LED[7:3] (Output)
++			*/
++			compatible = "ti,74174";
++			reg = <0x53000070 0x1>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-line-names = "led3", "led4", "led5", "led6", "led7", "unused";
++		};
++
++		di {
++			di-gpios = <&di 0 GPIO_ACTIVE_HIGH>,
++				<&di 1 0>,
++				<&di 2 GPIO_ACTIVE_HIGH>,
++				<&di 3 GPIO_ACTIVE_HIGH>;
++		};
++
++		do {
++			do-gpios = <&do 0 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>,
++				<&do 1 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>,
++				<&do 2 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>,
++				<&do 3 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
++		};
++
++		debug_leds {
++			dbg-led-gpios = <&dbg_led 0 GPIO_ACTIVE_LOW>,
++				<&dbg_led 1 1>,
++				<&dbg_led 2 GPIO_ACTIVE_LOW>,
++				<&dbg_led 3 GPIO_ACTIVE_LOW>;
++		};
++
++		pci@c0000000 {
++			status = "ok";
++
++			/*
++			 */
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map =
++			/* IDSEL 1 */
++			<0x0800 0 0 1 &gpio0 0 IRQ_TYPE_LEVEL_LOW>, /* INT A on slot 1 is irq 11 */
++			<0x0800 0 0 2 &gpio0 1 IRQ_TYPE_LEVEL_LOW>, /* INT B on slot 1 is irq 10 */
++			<0x0800 0 0 3 &gpio0 2 IRQ_TYPE_LEVEL_LOW>, /* INT C on slot 1 is irq 9 */
++			<0x0800 0 0 4 &gpio0 3 IRQ_TYPE_LEVEL_LOW>, /* INT D on slot 1 is irq 8 */
++			/* IDSEL 6 */
++			<0x3000 0 0 1 &gpio0 1 IRQ_TYPE_LEVEL_LOW>, /* INT A on slot 3 is irq 10 */
++			<0x3000 0 0 2 &gpio0 2 IRQ_TYPE_LEVEL_LOW>, /* INT B on slot 3 is irq 9 */
++			<0x3000 0 0 3 &gpio0 3 IRQ_TYPE_LEVEL_LOW>, /* INT C on slot 3 is irq 8 */
++			<0x3000 0 0 4 &gpio0 0 IRQ_TYPE_LEVEL_LOW>, /* INT D on slot 3 is irq 11 */
++			/* IDSEL 7 RTL-8100 10/100 Ethernet Controller */
++			<0x3800 0 0 1 &gpio0 2 IRQ_TYPE_LEVEL_LOW>, /* INT A is irq 2 */
++			/* IDSEL 8 Moxa Technologies Co Ltd UC7000 Serial */
++			<0x4000 0 0 1 &gpio0 3 IRQ_TYPE_LEVEL_LOW>; /* INT A is irq 3 */
++		};
++
++		/* EthA */
++		ethernet@c800c000 {
++			status = "ok";
++			queue-rx = <&qmgr 2>;
++			queue-txready = <&qmgr 19>;
++			phy-mode = "rgmii";
++			phy-handle = <&phy16>;
++           intel,npe-handle = <&npe 0>;
++		};
++
++		/* EthC */
++		ethernet@c800a000 {
++			status = "ok";
++			queue-rx = <&qmgr 4>;
++			queue-txready = <&qmgr 21>;
++			phy-mode = "rgmii";
++			phy-handle = <&phy2>;
++
++			mdio {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				phy2: ethernet-phy@2 {
++						reg = <2>;
++				};
++
++				phy16: ethernet-phy@16 {
++						reg = <16>;
++				};
++			};
++		};
++	};
++};
