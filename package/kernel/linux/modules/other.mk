@@ -1242,6 +1242,23 @@ endef
 $(eval $(call KernelPackage,thermal))
 
 
+define KernelPackage/gpio-74xx-mmio
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:=GPIO functionality for 74xx-compatible ICs with MMIO access
+  KCONFIG:= \
+	CONFIG_GPIO_74XX_MMIO
+  FILES:= \
+	$(LINUX_DIR)/drivers/gpio/gpio-74xx-mmio.ko
+  AUTOLOAD:=$(call AutoLoad,1,gpio-74xx-mmio)
+endef
+
+define KernelPackage/gpio-74xx-mmio/description
+ GPIO functionality for 74xx-compatible ICs with MMIO access
+endef
+
+$(eval $(call KernelPackage,gpio-74xx-mmio))
+
+
 define KernelPackage/gpio-beeper
   SUBMENU:=$(OTHER_MENU)
   TITLE:=GPIO beeper support
