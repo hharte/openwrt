@@ -675,6 +675,23 @@ endef
 $(eval $(call KernelPackage,rtc-isl1208))
 
 
+define KernelPackage/rtc-moxart
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:=MOXA ART: HT1380/HT1381 RTC support
+  DEFAULT:=m if ALL_KMODS && RTC_SUPPORT
+  KCONFIG:=CONFIG_RTC_DRV_MOXART \
+        CONFIG_RTC_CLASS=y
+  FILES:=$(LINUX_DIR)/drivers/rtc/rtc-moxart.ko
+  AUTOLOAD:=$(call AutoProbe,rtc-moxart)
+endef
+
+define KernelPackage/rtc-moxart/description
+ Kernel module for the HT1380/HT1381 RTC
+endef
+
+$(eval $(call KernelPackage,rtc-moxart))
+
+
 define KernelPackage/rtc-pcf8563
   SUBMENU:=$(OTHER_MENU)
   TITLE:=Philips PCF8563/Epson RTC8564 RTC support
