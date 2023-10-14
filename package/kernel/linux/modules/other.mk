@@ -944,6 +944,24 @@ endef
 $(eval $(call KernelPackage,serial-8250-exar))
 
 
+define KernelPackage/serial-mxser
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:=Moxa SmartIO support v. 2.0
+  DEFAULT:=m if ALL_KMODS
+  KCONFIG:= CONFIG_MOXA_SMARTIO \
+	   CONFIG_SERIAL_NONSTANDARD=y
+  FILES:=$(LINUX_DIR)/drivers/tty/mxser.ko
+  AUTOLOAD:=$(call AutoProbe,mxser)
+  DEPENDS:=@PCI_SUPPORT
+endef
+
+define KernelPackage/serial-mxser/description
+ Kernel module for Moxa SmartIO multi-port serial cards
+endef
+
+$(eval $(call KernelPackage,serial-mxser))
+
+
 define KernelPackage/regmap-core
   SUBMENU:=$(OTHER_MENU)
   TITLE:=Generic register map support
