@@ -1,0 +1,26 @@
+--- a/arch/arm/boot/dts/intel-ixp43x.dtsi	2022-02-18 17:10:37.092640083 +1300
++++ b/arch/arm/boot/dts/intel-ixp43x.dtsi	2022-02-18 17:14:43.115092727 +1300
+@@ -21,5 +21,23 @@
+ 		interrupt-controller@c8003000 {
+ 			compatible = "intel,ixp43x-interrupt";
+ 		};
++
++		ehci0: usb@cd000000 {
++			compatible = "intel,ixp43x-ehci", "generic-ehci";
++			reg = <0xcd000000 0x300>;
++			interrupts = <32 IRQ_TYPE_LEVEL_HIGH>;
++			has-transaction-translator;
++			big-endian;
++			status = "ok";
++		};
++
++		ehci1: usb@ce000000 {
++			compatible = "intel,ixp43x-ehci", "generic-ehci";
++			reg = <0xce000000 0x300>;
++			interrupts = <33 IRQ_TYPE_LEVEL_HIGH>;
++			has-transaction-translator;
++			big-endian;
++			status = "ok";
++		};
+ 	};
+ };

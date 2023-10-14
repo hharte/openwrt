@@ -1,0 +1,15 @@
+--- a/drivers/usb/host/ehci-platform.c	2022-02-18 10:23:48.981358530 +1300
++++ b/drivers/usb/host/ehci-platform.c	2022-02-18 13:13:23.746075755 +1300
+@@ -72,6 +72,12 @@
+ 	}
+ 
+ 	ehci->caps = hcd->regs + pdata->caps_offset;
++
++	if (of_device_is_compatible(pdev->dev.of_node, "intel,ixp43x-ehci")) {
++		ehci->caps = hcd->regs + 0x100;
++		pr_crit("ehci-platform: Set caps_offset = 0x100\n");
++	}
++
+ 	retval = ehci_setup(hcd);
+ 	if (retval)
+ 		return retval;

@@ -1,0 +1,10 @@
+--- a/Documentation/devicetree/bindings/usb/generic-ehci.yaml	2022-02-18 17:04:48.786030074 +1300
++++ b/Documentation/devicetree/bindings/usb/generic-ehci.yaml	2022-02-18 17:06:06.993405013 +1300
+@@ -56,6 +56,7 @@
+               - brcm,bcm7425-ehci
+               - brcm,bcm7435-ehci
+               - ibm,476gtr-ehci
++              - intel,ixp43x-ehci
+               - nxp,lpc1850-ehci
+               - qca,ar7100-ehci
+               - snps,hsdk-v1.0-ehci
