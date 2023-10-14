@@ -74,6 +74,20 @@ define Device/linksys_nslu2
 endef
 TARGET_DEVICES += linksys_nslu2
 
+define Device/moxa_uc8410
+	DEVICE_VENDOR := Moxa
+	DEVICE_MODEL := UC-8410
+	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-isl1208 kmod-gpio-beeper \
+			   kmod-8139too kmod-serial-mxser \
+			   minicom pciutils ntpdate iperf3 gpiod-tools
+	DEVICE_DTS := intel-ixp43x-moxa-uc8410
+	KERNEL := kernel-bin | append-dtb
+	IMAGES := kernel.bin rootfs.bin
+	IMAGE/kernel.bin := append-kernel
+	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
+endef
+TARGET_DEVICES += moxa_uc8410
+
 define Device/multitech_ffx30
 	DEVICE_VENDOR := MultiTech
 	DEVICE_MODEL := FaxFinder x30
@@ -87,7 +101,6 @@ define Device/multitech_ffx30
 	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
 endef
 TARGET_DEVICES += multitech_ffx30
-
 
 define Device/usrobotics_usr8200
 	DEVICE_VENDOR := USRobotics
