@@ -1,0 +1,228 @@
+--- /dev/null
++++ b/arch/arm/boot/dts/intel-ixp42x-moxa-uc7408.dts
+@@ -0,0 +1,225 @@
++// SPDX-License-Identifier: ISC
++/*
++ * Device Tree file for the Moxa UC-7408-LX
++ * VPN and NAS. Based on know-how from Peter Denison.
++ *
++ * This machine is based on IXP425
++ */
++
++/dts-v1/;
++
++#include "intel-ixp42x.dtsi"
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Moxa UC7408";
++	compatible = "moxa,moxauc7408", "intel,ixp42x";
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	memory@0 {
++        /* 128MB of SDRAM */
++		device_type = "memory";
++		reg = <0x00000000 0x04000000>;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200n8 libata.force=dump_id idebus=33 pci=cbmemsize=4M root=/dev/sda1 rw rootwait";
++		stdout-path = "uart1:115200n8";
++	};
++
++	aliases {
++		/* These are switched around */
++		serial0 = &uart1; /* Console for RedBoot and Linux */
++		serial1 = &uart0; /* Internal 2x2 3.3V LVTTL header */
++	};
++/*
++	leds {
++		compatible = "gpio-leds";
++		led-user {
++			label = "uc7408:green:ready";
++			gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++			linux,default-trigger = "heartbeat";
++		};
++	};
++*/
++	gpio_keys {
++		compatible = "gpio-keys";
++		button-reset {
++			wakeup-source;
++			linux,code = <KEY_RESTART>;
++			label = "reset";
++			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	rtc: rtc {
++		compatible = "moxa,moxart-rtc";
++		gpio-rtc-sclk = <&gpio0 12 0>;
++		gpio-rtc-data = <&gpio0 13 0>;
++		gpio-rtc-reset = <&gpio0 11 0>;
++	};
++
++	gpio-beeper {
++		compatible = "gpio-beeper";
++		gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
++	};
++
++	soc {
++		bus@c4000000 {
++			flash@0,0 {
++				compatible = "intel,ixp4xx-flash", "cfi-flash";
++				bank-width = <2>;
++				/* Enable writes on the expansion bus */
++				intel,ixp4xx-eb-write-enable = <1>;
++				/* 32 MB of Flash mapped in at CS0 */
++				reg = <0 0x00000000 0x2000000>;
++
++				partitions {
++					compatible = "redboot-fis";
++					/* Eraseblock at 0x0fe0000 */
++					fis-index-block = <0xff>;
++				};
++			};
++
++            /*
++             * Moxa Misc registers: CS2-CS5
++             */
++             
++            /* 0x52000000: R: HW_ID, W: LED */
++			moxa_led_id@2,0 {
++				reg = <2 0x00000000 0x100>;
++				/* Expansion bus settings */
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++			};
++
++            /* 0x53000000: W: LCM CMD0 */
++			moxa_lcm_cmd0@3,0 {
++				reg = <3 0x00000000 0x100>;
++				/* Expansion bus settings */
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++			};
++
++            /* 0x54000000: R: Keypad W: LCM CMD1 */
++			moxa_lcm_cmd1@4,0 {
++				reg = <4 0x00000000 0x100>;
++				/* Expansion bus settings */
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++			};
++
++            /* 0x55000000: R: DI Bits W: LCM DATA */
++			moxa_lcm_data@5,0 {
++				reg = <5 0x00000000 0x100>;
++				/* Expansion bus settings */
++				intel,ixp4xx-eb-write-enable = <1>;
++				intel,ixp4xx-eb-byte-access = <1>;
++			};
++		};
++
++		led: gpio@52000000 {
++			/*
++			* MMIO LEDs
++			*/
++			compatible = "ti,74273";
++			reg = <0x52000000 0x1>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-line-names = "led0", "led1", "led2", "led3", "led4", "led5", "led6", "led7";
++		};
++
++		keypad: gpio@54000000 {
++			/*
++			* MMIO Keypad
++			*/
++			compatible = "ti,74365";
++			reg = <0x54000000 0x1>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-line-names = "kp0", "kp1", "kp2", "kp3", "kp4", "sw_reset";
++		};
++
++		di: gpio@55000000 {
++			/*
++			* MMIO Digital Input (DI)
++			*/
++			compatible = "ti,74244";
++			reg = <0x55000000 0x1>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-line-names = "di0", "di1", "di2", "di3", "di4", "di5", "di6", "di7";
++		};
++
++		pci@c0000000 {
++			status = "okay";
++
++			/*
++			 * Taken from USR8200 boardfile from OpenWrt
++			 *
++			 * We have 3 slots (IDSEL) with partly swizzled IRQs on slot 16.
++			 * We assume the same IRQ for all pins on the remaining slots, that
++			 * is what the boardfile was doing.
++			 */
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map =
++			/* IDSEL 1 VIA VT6212L USB Controller */
++			<0x0800 0 0 1 &gpio0 2 IRQ_TYPE_LEVEL_LOW>,     /* INT A on slot 1 is irq 2 */
++			<0x0800 0 0 2 &gpio0 2 IRQ_TYPE_LEVEL_LOW>,     /* INT B on slot 1 is irq 2 */
++			<0x0800 0 0 3 &gpio0 2 IRQ_TYPE_LEVEL_LOW>,     /* INT C on slot 1 is irq 2 */
++			/* IDSEL 2 Cardbus Controller */
++			<0x1000 0 0 1 &gpio0 1 IRQ_TYPE_LEVEL_LOW>,     /* INT A on slot 1 is irq 1 */
++			<0x1000 0 0 2 &gpio0 1 IRQ_TYPE_LEVEL_LOW>,     /* INT B on slot 1 is irq 1 */
++			<0x1000 0 0 3 &gpio0 1 IRQ_TYPE_LEVEL_LOW>,     /* INT C on slot 1 is irq 1 */
++			/* IDSEL 3 MOXA UARTs */
++			<0x1800 0 0 1 &gpio0 0 IRQ_TYPE_LEVEL_LOW>;     /* INT A on slot 1 is irq 0 */
++		};
++
++		gpio@c8004000 {
++			/* Enable clock out on GPIO 14 and 15 */
++			intel,ixp4xx-gpio14-clkout;
++			intel,ixp4xx-gpio15-clkout;
++		};
++
++        /* EthB */
++		ethernet@c8009000 {
++			status = "ok";
++			queue-rx = <&qmgr 3>;
++			queue-txready = <&qmgr 20>;
++			phy-mode = "rgmii";
++			phy-handle = <&phy16>;
++
++			mdio {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				phy16: ethernet-phy@16 {
++					reg = <16>;
++				};
++
++				phy2: ethernet-phy@2 {
++					reg = <2>;
++				};
++			};
++		};
++
++		/* EthC */
++		ethernet@c800a000 {
++			status = "ok";
++			queue-rx = <&qmgr 4>;
++			queue-txready = <&qmgr 21>;
++			phy-mode = "rgmii";
++			phy-handle = <&phy2>;
++		};
++
++		usb@c800b000 {
++			compatible = "intel,ixp4xx-udc";
++			reg = <0xc800b000 0x1000>;
++			interrupts = <12 IRQ_TYPE_LEVEL_HIGH>;
++			status = "ok";
++		};
++	};
++};
