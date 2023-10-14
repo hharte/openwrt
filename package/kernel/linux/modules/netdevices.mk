@@ -693,7 +693,7 @@ define KernelPackage/8139too
   TITLE:=RealTek RTL-8139 PCI Fast Ethernet Adapter kernel support
   DEPENDS:=@PCI_SUPPORT +kmod-mii
   KCONFIG:=CONFIG_8139TOO \
-    CONFIG_8139TOO_PIO=y \
+    CONFIG_8139TOO_PIO=n \
     CONFIG_8139TOO_TUNE_TWISTER=n \
     CONFIG_8139TOO_8129=n \
     CONFIG_8139_OLD_RX_RESET=n
