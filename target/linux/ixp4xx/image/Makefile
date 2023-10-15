@@ -156,4 +156,16 @@ define Device/usrobotics_usr8200
 endef
 TARGET_DEVICES += usrobotics_usr8200
 
+define Device/wgxtm2
+	DEVICE_VENDOR := Watchguard
+	DEVICE_MODEL := XTM21-W
+	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-ds1672 kmod-eeprom-at24 kmod-usb2-pci kmod-hwmon-ad7418
+	DEVICE_DTS := intel-ixp43x-watchguard-xtm21w
+	KERNEL := kernel-bin | append-dtb
+	IMAGES := kernel.bin rootfs.bin
+	IMAGE/kernel.bin := append-kernel
+	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
+endef
+TARGET_DEVICES += wgxtm2
+
 $(eval $(call BuildImage))
