@@ -72,6 +72,19 @@ define Device/intel_ixdp425
 endef
 TARGET_DEVICES += intel_ixdp425
 
+define Device/intel_kixrp435
+	DEVICE_VENDOR := Intel
+	DEVICE_MODEL := KIXRP435 Development Platform
+	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-ds1672 kmod-eeprom-at24 kmod-hwmon-ad7418 \
+			   minicom pciutils ntpdate iperf3 gpiod-tools
+	DEVICE_DTS := intel-ixp43x-kixrp435
+	KERNEL := kernel-bin | append-dtb
+	IMAGES := kernel.bin rootfs.bin
+	IMAGE/kernel.bin := append-kernel
+	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
+endef
+TARGET_DEVICES += intel_kixrp435
+
 define Device/linksys_nslu2
 	DEVICE_VENDOR := Linksys
 	DEVICE_MODEL := NSLU2
