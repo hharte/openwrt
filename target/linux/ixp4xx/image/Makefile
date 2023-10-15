@@ -59,6 +59,19 @@ define Device/gateworks_cambria
 endef
 TARGET_DEVICES += gateworks_cambria
 
+define Device/intel_ixdp425
+	DEVICE_VENDOR := Intel
+	DEVICE_MODEL := IXDP425 Development Platform
+	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-ds1672 kmod-eeprom-at24 kmod-hwmon-ad7418 \
+			   minicom pciutils ntpdate iperf3 gpiod-tools
+	DEVICE_DTS := intel-ixp42x-ixdp425
+	KERNEL := kernel-bin | append-dtb
+	IMAGES := kernel.bin rootfs.bin
+	IMAGE/kernel.bin := append-kernel
+	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
+endef
+TARGET_DEVICES += intel_ixdp425
+
 define Device/linksys_nslu2
 	DEVICE_VENDOR := Linksys
 	DEVICE_MODEL := NSLU2
