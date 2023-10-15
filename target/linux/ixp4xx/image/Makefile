@@ -74,6 +74,21 @@ define Device/linksys_nslu2
 endef
 TARGET_DEVICES += linksys_nslu2
 
+define Device/moxa_uc7408
+	DEVICE_VENDOR := Moxa
+	DEVICE_MODEL := UC-7408
+	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-moxart kmod-gpio-beeper \
+			   kmod-serial-mxser kmod-gpio-74xx-mmio \
+			   kmod-pcmcia-core kmod-pcmcia-rsrc kmod-pcmcia-yenta kmod-pcmcia-serial \
+			   minicom pciutils ntpdate iperf3 gpiod-tools
+	DEVICE_DTS := intel-ixp42x-moxa-uc7408
+	KERNEL := kernel-bin | append-dtb
+	IMAGES := kernel.bin rootfs.bin
+	IMAGE/kernel.bin := append-kernel
+	IMAGE/rootfs.bin := append-rootfs | pad-rootfs | pad-to 128k
+endef
+TARGET_DEVICES += moxa_uc7408
+
 define Device/moxa_uc8410
 	DEVICE_VENDOR := Moxa
 	DEVICE_MODEL := UC-8410
