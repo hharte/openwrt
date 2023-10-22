@@ -71,7 +71,7 @@ def get_flash_size():
         print("Warning: IXP42x stepping A0 detected!")
         if imagefile or url:
             print("Error: No linux support for A0 stepping!")
-            sys.exit(2)
+            #sys.exit(2)
 
     # now get flash size
     tn.write("cat /proc/mtd\n")
