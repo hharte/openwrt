@@ -1,0 +1,95 @@
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -143,7 +143,7 @@ config MTD_NAND_ATMEL
+ 
+ config MTD_NAND_ORION
+ 	tristate "Marvell Orion NAND controller"
+-	depends on PLAT_ORION
++	depends on PLAT_ORION || ARCH_IXP4XX
+ 	help
+ 	  This enables the NAND flash controller on Orion machines.
+ 
+--- a/drivers/mtd/nand/raw/orion_nand.c
++++ b/drivers/mtd/nand/raw/orion_nand.c
+@@ -20,6 +20,7 @@
+ #include <linux/io.h>
+ #include <linux/sizes.h>
+ #include <linux/platform_data/mtd-orion_nand.h>
++#include <linux/gpio.h>
+ 
+ struct orion_nand_info {
+ 	struct nand_controller controller;
+@@ -27,6 +28,8 @@ struct orion_nand_info {
+ 	struct clk *clk;
+ };
+ 
++#define IXDP425_NAND_NCE_PIN 9
++
+ static void orion_nand_cmd_ctrl(struct nand_chip *nc, int cmd,
+ 				unsigned int ctrl)
+ {
+@@ -52,16 +55,15 @@ static void orion_nand_cmd_ctrl(struct n
+ static void orion_nand_read_buf(struct nand_chip *chip, uint8_t *buf, int len)
+ {
+ 	void __iomem *io_base = chip->legacy.IO_ADDR_R;
+-#if defined(__LINUX_ARM_ARCH__) && __LINUX_ARM_ARCH__ >= 5
++#if 0 //defined(__LINUX_ARM_ARCH__) && __LINUX_ARM_ARCH__ >= 5
+ 	uint64_t *buf64;
+ #endif
+ 	int i = 0;
+-
+-	while (len && (unsigned long)buf & 7) {
+-		*buf++ = readb(io_base);
+-		len--;
+-	}
+-#if defined(__LINUX_ARM_ARCH__) && __LINUX_ARM_ARCH__ >= 5
++//	while (len && (unsigned long)buf & 7) {
++//		*buf++ = readb(io_base);
++//		len--;
++//	}
++#if 0 //defined(__LINUX_ARM_ARCH__) && __LINUX_ARM_ARCH__ >= 5
+ 	buf64 = (uint64_t *)buf;
+ 	while (i < len/8) {
+ 		/*
+@@ -76,8 +78,8 @@ static void orion_nand_read_buf(struct n
+ 	}
+ 	i *= 8;
+ #else
+-	readsl(io_base, buf, len/4);
+-	i = len / 4 * 4;
++//	readsl(io_base, buf, len/4);
++//	i = len / 4 * 4;
+ #endif
+ 	while (i < len)
+ 		buf[i++] = readb(io_base);
+@@ -189,6 +191,9 @@ static int __init orion_nand_probe(struc
+ 	 */
+ 	nc->ecc.engine_type = NAND_ECC_ENGINE_TYPE_SOFT;
+ 
++	/* Assert NAND CE# pin */
++	gpio_set_value(IXDP425_NAND_NCE_PIN, 0);
++
+ 	ret = nand_scan(nc, 1);
+ 	if (ret)
+ 		goto no_dev;
+@@ -204,6 +209,10 @@ static int __init orion_nand_probe(struc
+ 
+ no_dev:
+ 	clk_disable_unprepare(info->clk);
++
++	/* Deassert NAND CE# pin */
++	gpio_set_value(IXDP425_NAND_NCE_PIN, 1);
++
+ 	return ret;
+ }
+ 
+@@ -220,6 +229,9 @@ static int orion_nand_remove(struct plat
+ 
+ 	clk_disable_unprepare(info->clk);
+ 
++	/* Deassert NAND CE# pin */
++	gpio_set_value(IXDP425_NAND_NCE_PIN, 1);
++
+ 	return 0;
+ }
+ 
