@@ -105,8 +105,9 @@ define Device/moxa_uc7408
 	DEVICE_MODEL := UC-7408
 	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-moxart kmod-gpio-beeper \
 			   kmod-serial-mxser kmod-gpio-74xx-mmio \
-			   kmod-pcmcia-core kmod-pcmcia-rsrc kmod-pcmcia-yenta kmod-pcmcia-serial \
+			   kmod-pcmcia-core kmod-pcmcia-rsrc kmod-pcmcia-yenta kmod-pcmcia-serial pcmciautils \
 			   minicom pciutils ntpdate iperf3 gpiod-tools
+
 	DEVICE_DTS := intel-ixp42x-moxa-uc7408
 	KERNEL := kernel-bin | append-dtb
 	IMAGES := kernel.bin rootfs.bin
@@ -120,7 +121,8 @@ define Device/moxa_uc8410
 	DEVICE_MODEL := UC-8410
 	DEVICE_PACKAGES := ixp4xx-microcode-ethernet kmod-rtc-isl1208 kmod-gpio-beeper \
 			   kmod-8139too kmod-serial-mxser \
-			   minicom pciutils ntpdate iperf3 gpiod-tools
+			   minicom pciutils ntpdate iperf3 gpiod-tools \
+			   kmod-i2c-smbus
 	DEVICE_DTS := intel-ixp43x-moxa-uc8410
 	KERNEL := kernel-bin | append-dtb
 	IMAGES := kernel.bin rootfs.bin

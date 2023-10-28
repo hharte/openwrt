@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 ARCH:=armeb
 BOARD:=ixp4xx
 BOARDNAME:=Intel XScale IXP4xx
-FEATURES:=dt squashfs gpio
+FEATURES:=dt squashfs gpio pcmcia nand
 CPU_TYPE:=xscale
 SUBTARGETS:=generic
 
